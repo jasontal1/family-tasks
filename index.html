@@ -1,0 +1,597 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Tal Family Tasks</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Inter:wght@400;500;600&display=swap');
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --cream: #FAF7F2;
+      --ink: #1C1A17;
+      --sage: #6B8C72;
+      --sage-light: #EBF1EC;
+      --sand: #C9A97A;
+      --sand-light: #FDF5EA;
+      --rose: #C97A7A;
+      --rose-light: #FAEAEA;
+      --sky: #7A9EC9;
+      --sky-light: #EAF0FA;
+      --muted: #8A8070;
+      --border: #E2DDD5;
+      --done-bg: #F2F0ED;
+      --done-text: #A09A90;
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--cream);
+      color: var(--ink);
+      min-height: 100vh;
+    }
+
+    header {
+      background: var(--ink);
+      color: white;
+      padding: 20px 24px 16px;
+      display: flex;
+      align-items: baseline;
+      gap: 12px;
+    }
+
+    header h1 {
+      font-family: 'DM Serif Display', serif;
+      font-size: 1.7rem;
+      font-weight: 400;
+      letter-spacing: -0.01em;
+    }
+
+    header span {
+      font-size: 0.8rem;
+      color: #A09880;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+
+    .toolbar {
+      background: white;
+      border-bottom: 1px solid var(--border);
+      padding: 12px 16px;
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .filter-btn {
+      font-family: 'Inter', sans-serif;
+      font-size: 0.78rem;
+      font-weight: 500;
+      padding: 5px 12px;
+      border-radius: 20px;
+      border: 1.5px solid var(--border);
+      background: white;
+      color: var(--muted);
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .filter-btn.active, .filter-btn:hover {
+      border-color: var(--ink);
+      color: var(--ink);
+      background: var(--cream);
+    }
+
+    .filter-btn.active { background: var(--ink); color: white; border-color: var(--ink); }
+
+    .add-btn {
+      margin-left: auto;
+      background: var(--sage);
+      color: white;
+      border: none;
+      border-radius: 20px;
+      font-family: 'Inter', sans-serif;
+      font-size: 0.8rem;
+      font-weight: 600;
+      padding: 6px 14px;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+
+    .add-btn:hover { background: #5a7860; }
+
+    .task-list {
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      max-width: 780px;
+      margin: 0 auto;
+    }
+
+    .task-card {
+      background: white;
+      border: 1.5px solid var(--border);
+      border-radius: 10px;
+      padding: 12px 14px;
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      transition: box-shadow 0.15s;
+      animation: slideIn 0.2s ease;
+    }
+
+    @keyframes slideIn {
+      from { opacity: 0; transform: translateY(-6px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .task-card:hover { box-shadow: 0 2px 8px rgba(0,0,0,0.07); }
+
+    .task-card.done {
+      background: var(--done-bg);
+      border-color: #DDD9D2;
+    }
+
+    .task-card.done .task-title {
+      text-decoration: line-through;
+      color: var(--done-text);
+    }
+
+    .check-wrap {
+      flex-shrink: 0;
+      margin-top: 1px;
+    }
+
+    .check-wrap input[type="checkbox"] {
+      width: 18px;
+      height: 18px;
+      accent-color: var(--sage);
+      cursor: pointer;
+    }
+
+    .task-body { flex: 1; min-width: 0; }
+
+    .task-title {
+      font-size: 0.93rem;
+      font-weight: 500;
+      line-height: 1.4;
+      word-break: break-word;
+    }
+
+    .task-meta {
+      margin-top: 5px;
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .assignee-badge {
+      font-size: 0.72rem;
+      font-weight: 600;
+      padding: 2px 8px;
+      border-radius: 10px;
+      white-space: nowrap;
+    }
+
+    .badge-all    { background: var(--sage-light); color: var(--sage); }
+    .badge-jason  { background: var(--sky-light); color: var(--sky); }
+    .badge-jenny  { background: var(--rose-light); color: var(--rose); }
+    .badge-josie  { background: #F3EAF9; color: #9B6BB5; }
+    .badge-william{ background: #FFF3E0; color: #D4820A; }
+    .badge-mom    { background: var(--rose-light); color: var(--rose); }
+    .badge-dad    { background: var(--sky-light); color: var(--sky); }
+    .badge-momdad { background: #F3EAF9; color: #9B6BB5; }
+    .badge-unassigned { background: #F0EFED; color: #908880; }
+
+    .task-actions {
+      display: flex;
+      gap: 6px;
+      flex-shrink: 0;
+      margin-top: 1px;
+    }
+
+    .icon-btn {
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: 3px 5px;
+      border-radius: 5px;
+      color: var(--muted);
+      font-size: 0.9rem;
+      transition: background 0.12s, color 0.12s;
+    }
+
+    .icon-btn:hover { background: var(--cream); color: var(--ink); }
+    .icon-btn.del:hover { background: var(--rose-light); color: var(--rose); }
+
+    /* Modal */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(28,26,23,0.45);
+      z-index: 100;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .modal-overlay.open { display: flex; }
+
+    .modal {
+      background: white;
+      border-radius: 14px;
+      padding: 24px;
+      width: 100%;
+      max-width: 420px;
+      box-shadow: 0 12px 40px rgba(0,0,0,0.18);
+    }
+
+    .modal h2 {
+      font-family: 'DM Serif Display', serif;
+      font-size: 1.3rem;
+      margin-bottom: 18px;
+    }
+
+    .form-group {
+      margin-bottom: 14px;
+    }
+
+    .form-group label {
+      display: block;
+      font-size: 0.78rem;
+      font-weight: 600;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 5px;
+    }
+
+    .form-group input,
+    .form-group select {
+      width: 100%;
+      padding: 9px 12px;
+      border: 1.5px solid var(--border);
+      border-radius: 8px;
+      font-family: 'Inter', sans-serif;
+      font-size: 0.9rem;
+      color: var(--ink);
+      background: var(--cream);
+      transition: border-color 0.15s;
+      outline: none;
+    }
+
+    .form-group input:focus,
+    .form-group select:focus {
+      border-color: var(--sage);
+    }
+
+    .modal-actions {
+      display: flex;
+      gap: 8px;
+      margin-top: 20px;
+      justify-content: flex-end;
+    }
+
+    .btn-cancel {
+      font-family: 'Inter', sans-serif;
+      font-size: 0.85rem;
+      font-weight: 500;
+      padding: 8px 16px;
+      border-radius: 8px;
+      border: 1.5px solid var(--border);
+      background: white;
+      cursor: pointer;
+      color: var(--muted);
+    }
+
+    .btn-save {
+      font-family: 'Inter', sans-serif;
+      font-size: 0.85rem;
+      font-weight: 600;
+      padding: 8px 18px;
+      border-radius: 8px;
+      border: none;
+      background: var(--sage);
+      color: white;
+      cursor: pointer;
+    }
+
+    .btn-save:hover { background: #5a7860; }
+
+    .empty-state {
+      text-align: center;
+      padding: 48px 24px;
+      color: var(--muted);
+      font-size: 0.9rem;
+    }
+
+    .loading {
+      text-align: center;
+      padding: 40px;
+      color: var(--muted);
+      font-style: italic;
+      font-size: 0.9rem;
+    }
+
+    .stats-bar {
+      display: flex;
+      gap: 16px;
+      padding: 10px 16px;
+      background: white;
+      border-bottom: 1px solid var(--border);
+      font-size: 0.78rem;
+      color: var(--muted);
+      max-width: 780px;
+      margin: 0 auto;
+    }
+
+    .stat strong { color: var(--ink); }
+
+    @media (max-width: 480px) {
+      header h1 { font-size: 1.3rem; }
+      .task-list { padding: 10px; }
+      .modal { padding: 18px; }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>Tal Family Tasks</h1>
+  <span id="today-date"></span>
+</header>
+
+<div class="toolbar">
+  <button class="filter-btn active" onclick="setFilter('all')">All</button>
+  <button class="filter-btn" onclick="setFilter('open')">Open</button>
+  <button class="filter-btn" onclick="setFilter('done')">Done</button>
+  <button class="filter-btn" onclick="setFilter('jason')">Jason</button>
+  <button class="filter-btn" onclick="setFilter('jenny')">Jenny</button>
+  <button class="filter-btn" onclick="setFilter('josie')">Josie</button>
+  <button class="filter-btn" onclick="setFilter('william')">William</button>
+  <button class="filter-btn" onclick="setFilter('all-family')">All (Family)</button>
+  <button class="add-btn" onclick="openModal()">+ Add Task</button>
+</div>
+
+<div style="max-width:780px;margin:0 auto">
+  <div class="stats-bar">
+    <span><strong id="stat-total">0</strong> tasks</span>
+    <span><strong id="stat-done">0</strong> done</span>
+    <span><strong id="stat-open">0</strong> remaining</span>
+  </div>
+</div>
+
+<div class="task-list" id="task-list">
+  <div class="loading">Loading tasks…</div>
+</div>
+
+<!-- Modal -->
+<div class="modal-overlay" id="modal" onclick="handleOverlayClick(event)">
+  <div class="modal">
+    <h2 id="modal-title">Add Task</h2>
+    <div class="form-group">
+      <label>Task</label>
+      <input type="text" id="input-title" placeholder="What needs to get done?" />
+    </div>
+    <div class="form-group">
+      <label>Who's doing it?</label>
+      <select id="input-assignee">
+        <option value="All">All</option>
+        <option value="Jason">Jason</option>
+        <option value="Jenny">Jenny</option>
+        <option value="Josie">Josie</option>
+        <option value="William">William</option>
+        <option value="Mom">Mom</option>
+        <option value="Dad">Dad</option>
+        <option value="Mom and Dad">Mom and Dad</option>
+        <option value="Unassigned">Unassigned</option>
+      </select>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeModal()">Cancel</button>
+      <button class="btn-save" onclick="saveTask()">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- Firebase -->
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
+  import { getDatabase, ref, onValue, push, set, update, remove } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-database.js";
+
+  // ── PASTE YOUR FIREBASE CONFIG BELOW ──
+const firebaseConfig = {
+  apiKey: "AIzaSyCJ6KO3zSBzTtFzk_pN7LdBFL64cOOmGhE",
+  authDomain: "family-gift-lists-b0afc.firebaseapp.com",
+  databaseURL: "https://family-gift-lists-b0afc-default-rtdb.firebaseio.com",
+  projectId: "family-gift-lists-b0afc",
+  storageBucket: "family-gift-lists-b0afc.firebasestorage.app",
+  messagingSenderId: "66741872062",
+  appId: "1:66741872062:web:18ddad7057adf7f7ee45ef",
+  measurementId: "G-Y5VMVDCY4Y"
+  };
+  // ──────────────────────────────────────
+
+  const SEED_TASKS = [
+    { title: "Wash the few fence panels", assignee: "All", done: false },
+    { title: "Review party details", assignee: "All", done: false },
+    { title: "Photo station setup", assignee: "All", done: false },
+    { title: "Plan what to do so people are not bored", assignee: "All", done: false },
+    { title: "Food planning", assignee: "All", done: false },
+    { title: "Music planning", assignee: "All", done: false },
+    { title: "Pull weeds by deck", assignee: "All", done: false },
+    { title: "Rearrange deck", assignee: "All", done: false },
+    { title: "Pay bills", assignee: "All", done: false },
+    { title: "Work email", assignee: "Dad", done: false },
+    { title: "William running workout", assignee: "William", done: false },
+    { title: "Review college forms", assignee: "All", done: false },
+    { title: "Repot flowers", assignee: "Mom", done: false },
+    { title: "Pull bamboo", assignee: "Jason", done: false },
+    { title: "Trash green cylinder", assignee: "Jason", done: false },
+    { title: "Do a bend", assignee: "All", done: false },
+    { title: "Do a background walk-around", assignee: "All", done: false },
+    { title: "Jason protein breakfast", assignee: "Jason", done: false },
+    { title: "Clean out towel closet", assignee: "Mom and Dad", done: false },
+    { title: "Jason cleans out his closet", assignee: "Jason", done: false },
+    { title: "Take books to Franklin", assignee: "William", done: false },
+    { title: "Solve for kitchen table", assignee: "Mom", done: false },
+    { title: "Puppy training session – Sit", assignee: "Josie", done: false },
+    { title: "Return white dresses and shoes to Nordstrom Rack", assignee: "Josie", done: false },
+    { title: "Find white shoes", assignee: "Josie", done: false },
+    { title: "Review family: who's coming, how getting here, where staying", assignee: "All", done: false },
+    { title: "Party favor rice crispy treats?", assignee: "All", done: false },
+  ];
+
+  const app = initializeApp(firebaseConfig);
+  const db = getDatabase(app);
+  const tasksRef = ref(db, "familyTasks");
+
+  let allTasks = {};
+  let currentFilter = 'all';
+  let editingKey = null;
+
+  // Seed on first load
+  onValue(tasksRef, (snap) => {
+    const data = snap.val();
+    if (!data) {
+      SEED_TASKS.forEach(t => push(tasksRef, t));
+      return;
+    }
+    allTasks = data;
+    renderTasks();
+  });
+
+  function badgeClass(assignee) {
+    const a = (assignee || '').toLowerCase();
+    if (a === 'all') return 'badge-all';
+    if (a === 'jason') return 'badge-jason';
+    if (a === 'jenny') return 'badge-jenny';
+    if (a === 'josie') return 'badge-josie';
+    if (a === 'william') return 'badge-william';
+    if (a === 'mom') return 'badge-mom';
+    if (a === 'dad') return 'badge-dad';
+    if (a.includes('mom') && a.includes('dad')) return 'badge-momdad';
+    return 'badge-unassigned';
+  }
+
+  function renderTasks() {
+    const list = document.getElementById('task-list');
+    const entries = Object.entries(allTasks);
+
+    let filtered = entries;
+    const f = currentFilter;
+    if (f === 'open') filtered = entries.filter(([,t]) => !t.done);
+    else if (f === 'done') filtered = entries.filter(([,t]) => t.done);
+    else if (f === 'jason') filtered = entries.filter(([,t]) => (t.assignee||'').toLowerCase().includes('jason'));
+    else if (f === 'jenny') filtered = entries.filter(([,t]) => (t.assignee||'').toLowerCase().includes('jenny'));
+    else if (f === 'josie') filtered = entries.filter(([,t]) => (t.assignee||'').toLowerCase().includes('josie'));
+    else if (f === 'william') filtered = entries.filter(([,t]) => (t.assignee||'').toLowerCase().includes('william'));
+    else if (f === 'all-family') filtered = entries.filter(([,t]) => (t.assignee||'').toLowerCase() === 'all');
+
+    // Sort: open first, then done
+    filtered.sort((a, b) => (a[1].done ? 1 : 0) - (b[1].done ? 1 : 0));
+
+    const total = entries.length;
+    const done = entries.filter(([,t]) => t.done).length;
+    document.getElementById('stat-total').textContent = total;
+    document.getElementById('stat-done').textContent = done;
+    document.getElementById('stat-open').textContent = total - done;
+
+    if (filtered.length === 0) {
+      list.innerHTML = '<div class="empty-state">No tasks here. Nice work! 🎉</div>';
+      return;
+    }
+
+    list.innerHTML = filtered.map(([key, task]) => `
+      <div class="task-card ${task.done ? 'done' : ''}" id="card-${key}">
+        <div class="check-wrap">
+          <input type="checkbox" ${task.done ? 'checked' : ''} onchange="toggleDone('${key}', this.checked)" />
+        </div>
+        <div class="task-body">
+          <div class="task-title">${escHtml(task.title)}</div>
+          <div class="task-meta">
+            <span class="assignee-badge ${badgeClass(task.assignee)}">${escHtml(task.assignee || 'Unassigned')}</span>
+          </div>
+        </div>
+        <div class="task-actions">
+          <button class="icon-btn" onclick="startEdit('${key}')" title="Edit">✏️</button>
+          <button class="icon-btn del" onclick="deleteTask('${key}')" title="Delete">🗑️</button>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  function escHtml(s) {
+    return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  window.toggleDone = (key, val) => update(ref(db, `familyTasks/${key}`), { done: val });
+
+  window.deleteTask = (key) => {
+    if (confirm('Delete this task?')) remove(ref(db, `familyTasks/${key}`));
+  };
+
+  window.startEdit = (key) => {
+    const task = allTasks[key];
+    editingKey = key;
+    document.getElementById('modal-title').textContent = 'Edit Task';
+    document.getElementById('input-title').value = task.title;
+    document.getElementById('input-assignee').value = task.assignee || 'Unassigned';
+    document.getElementById('modal').classList.add('open');
+    document.getElementById('input-title').focus();
+  };
+
+  window.openModal = () => {
+    editingKey = null;
+    document.getElementById('modal-title').textContent = 'Add Task';
+    document.getElementById('input-title').value = '';
+    document.getElementById('input-assignee').value = 'All';
+    document.getElementById('modal').classList.add('open');
+    document.getElementById('input-title').focus();
+  };
+
+  window.closeModal = () => {
+    document.getElementById('modal').classList.remove('open');
+    editingKey = null;
+  };
+
+  window.handleOverlayClick = (e) => {
+    if (e.target === document.getElementById('modal')) closeModal();
+  };
+
+  window.saveTask = () => {
+    const title = document.getElementById('input-title').value.trim();
+    const assignee = document.getElementById('input-assignee').value;
+    if (!title) { document.getElementById('input-title').focus(); return; }
+
+    if (editingKey) {
+      update(ref(db, `familyTasks/${editingKey}`), { title, assignee });
+    } else {
+      push(tasksRef, { title, assignee, done: false });
+    }
+    closeModal();
+  };
+
+  window.setFilter = (f) => {
+    currentFilter = f;
+    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+    event.target.classList.add('active');
+    renderTasks();
+  };
+
+  // Enter key in modal
+  document.getElementById('input-title').addEventListener('keydown', e => {
+    if (e.key === 'Enter') window.saveTask();
+  });
+
+  // Date
+  document.getElementById('today-date').textContent = new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
+</script>
+</body>
+</html>
